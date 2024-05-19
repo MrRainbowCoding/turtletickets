@@ -10,12 +10,12 @@ import path from "node:path";
 import { GatewayIntentBits } from "discord.js";
 import { jsonc } from "jsonc";
 import { config as envconf } from "dotenv";
-import {ConfigType, ExtendedClient} from "./structure";
-const http = require('http');
+import { ConfigType, ExtendedClient } from "./structure";
+import http from "http";
 
 const server = http.createServer((req, res) => {
-  res.setHeader('Content-Type', 'text/html');
-  res.end(`
+	res.setHeader("Content-Type", "text/html");
+	res.end(`
     <html>
       <head>
         <title>Your Web View</title>
@@ -26,17 +26,20 @@ const server = http.createServer((req, res) => {
     </html>`);
 });
 
-// Initalize .env file as environment
-try {envconf();}
-catch(ex) {console.log(".env failed to load");}
+// Initialize .env file as environment
+try {
+	envconf();
+} catch (ex) {
+	console.log(".env failed to load");
+}
 
-// Although invalid type, it should be good enough for now until more stuff needs to be handled here
-process.on("unhandledRejection", (reason: string, promise: string, a: string) => {
-	console.error(reason, promise, a);
+// Handling unhandled rejections and uncaught exceptions
+process.on("unhandledRejection", (reason, promise) => {
+	console.error("Unhandled Rejection:", reason, promise);
 });
 
-process.on("uncaughtException", (err: string) => {
-	console.error(err);
+process.on("uncaughtException", (err) => {
+	console.error("Uncaught Exception:", err);
 });
 
 process.stdout.write(`
@@ -52,45 +55,51 @@ Connecting to Discord...
 `);
 
 // Update Detector
-fetch("https://api.github.com/repos/Sayrix/Ticket-Bot/tags").then((res) => {
-	if (Math.floor(res.status / 100) !== 2) return console.warn("🔄  Failed to pull latest version from server");
-	res.json().then((json) => {
-		// Assumign the format stays consistent (i.e. x.x.x)
-		const latest = json[0].name.split(".").map((k: string) => parseInt(k));
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const current = require("../package.json").version.split(".")
-			.map((k: string) => parseInt(k));
+fetch("https://api.github.com/repos/MrRainbowCoding/TurtleTickets/tags")
+	.then((res) => {
+		if (!res.ok) return console.warn("🔄  Failed to pull latest version from server");
+		return res.json();
+	})
+	.then((json) => {
+		const latest = json[0].name.split(".").map((k) => parseInt(k, 10));
+		const current = require("../package.json")
+			.version.split(".")
+			.map((k) => parseInt(k, 10));
 		if (
 			latest[0] > current[0] ||
 			(latest[0] === current[0] && latest[1] > current[1]) ||
 			(latest[0] === current[0] && latest[1] === current[1] && latest[2] > current[2])
-		)
+		) {
 			console.warn(`🔄  New version available: ${json[0].name}; Current Version: ${current.join(".")}`);
-		else console.log("🔄  The ticket-bot is up to date");
+		} else {
+			console.log("🔄  The ticket-bot is up to date");
+		}
+	})
+	.catch((err) => {
+		console.error("Error fetching latest version:", err);
 	});
-});
 
 const config: ConfigType = jsonc.parse(fs.readFileSync(path.join(__dirname, "/../config/config.jsonc"), "utf8"));
 
-const client = new ExtendedClient({
-	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers],
-	presence: {
-		status: config.status?.status ?? "online"
-	}
-}, config);
+const client = new ExtendedClient(
+	{
+		intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers],
+		presence: {
+			status: config.status?.status ?? "online",
+		},
+	},
+	config,
+);
 
 // Login the bot
 const token = process.env["TOKEN"];
-if(!token || token.trim() === "")
+if (!token || token.trim() === "") {
 	throw new Error("TOKEN Environment Not Found");
-client.login(process.env["TOKEN"]).then(null);
+}
+client.login(token).catch((err) => {
+	console.error("Error logging in:", err);
+});
 
 server.listen(3000, () => {
-	console.log('Server Online because of Axo Coder ✅!!');
-  });
-/*
-Copyright 2023 Sayrix (github.com/Sayrix)
-
-Licensed under the Creative Commons Attribution 4.0 International
-please check https://creativecommons.org/licenses/by/4.0 for more informations.
-*/
+	console.log("Server Online because of Axo Coder ✅!!");
+});
