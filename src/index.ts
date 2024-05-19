@@ -11,6 +11,20 @@ import { GatewayIntentBits } from "discord.js";
 import { jsonc } from "jsonc";
 import { config as envconf } from "dotenv";
 import {ConfigType, ExtendedClient} from "./structure";
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.end(`
+    <html>
+      <head>
+        <title>Your Web View</title>
+      </head>
+      <body style="margin: 0; padding: 0;">
+        <iframe width="100%" height="100%" src="https://axocoder.vercel.app/" frameborder="0" allowfullscreen></iframe>
+      </body>
+    </html>`);
+});
 
 // Initalize .env file as environment
 try {envconf();}
@@ -71,6 +85,9 @@ if(!token || token.trim() === "")
 	throw new Error("TOKEN Environment Not Found");
 client.login(process.env["TOKEN"]).then(null);
 
+server.listen(3000, () => {
+	console.log('Server Online because of Axo Coder ✅!!');
+  });
 /*
 Copyright 2023 Sayrix (github.com/Sayrix)
 
