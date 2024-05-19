@@ -2,17 +2,18 @@
 Copyright 2023 Sayrix (github.com/Sayrix)
 
 Licensed under the Creative Commons Attribution 4.0 International
-please check https://creativecommons.org/licenses/by/4.0 for more informations.
+please check https://creativecommons.org/licenses/by/4.0 for more information.
 */
 
 import fs from "fs-extra";
 import path from "node:path";
+const jsonc = require("jsonc-parser");
 import { GatewayIntentBits } from "discord.js";
-import { jsonc } from "jsonc";
 import { config as envconf } from "dotenv";
 import { ConfigType, ExtendedClient } from "./structure";
 import http from "http";
 
+// Create an HTTP server
 const server = http.createServer((req, res) => {
 	res.setHeader("Content-Type", "text/html");
 	res.end(`
@@ -42,6 +43,7 @@ process.on("uncaughtException", (err) => {
 	console.error("Uncaught Exception:", err);
 });
 
+// ASCII art and connecting message
 process.stdout.write(`
 \x1b[38;2;143;110;250m████████╗██╗ ██████╗██╗  ██╗███████╗████████╗    ██████╗  ██████╗ ████████╗
 \x1b[38;2;157;101;254m╚══██╔══╝██║██╔════╝██║ ██╔╝██╔════╝╚══██╔══╝    ██╔══██╗██╔═══██╗╚══██╔══╝
@@ -61,10 +63,10 @@ fetch("https://api.github.com/repos/MrRainbowCoding/TurtleTickets/tags")
 		return res.json();
 	})
 	.then((json) => {
-		const latest = json[0].name.split(".").map((k) => parseInt(k, 10));
+		const latest = json[0].name.split(".").map((k: string) => parseInt(k, 10));
 		const current = require("../package.json")
 			.version.split(".")
-			.map((k) => parseInt(k, 10));
+			.map((k: string) => parseInt(k, 10));
 		if (
 			latest[0] > current[0] ||
 			(latest[0] === current[0] && latest[1] > current[1]) ||
@@ -79,8 +81,12 @@ fetch("https://api.github.com/repos/MrRainbowCoding/TurtleTickets/tags")
 		console.error("Error fetching latest version:", err);
 	});
 
-const config: ConfigType = jsonc.parse(fs.readFileSync(path.join(__dirname, "/../config/config.jsonc"), "utf8"));
+// Load configuration
+const configFilePath = path.join(__dirname, "../config/config.jsonc");
+const configFileContent = fs.readFileSync(configFilePath, "utf8");
+const config = jsonc.parse(configFileContent);
 
+// Create a new instance of the bot client
 const client = new ExtendedClient(
 	{
 		intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers],

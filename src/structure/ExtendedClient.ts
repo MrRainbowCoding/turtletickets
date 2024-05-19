@@ -1,13 +1,13 @@
-import {Client, ClientOptions, Collection, Routes} from "discord.js";
-import {BaseCommand, ConfigType} from "./";
-import {PrismaClient} from "@prisma/client";
+import { Client, ClientOptions, Collection, Routes } from "discord.js";
+import { BaseCommand, ConfigType } from "./";
+import { PrismaClient } from "@prisma/client";
 import fs from "fs-extra";
 import path from "node:path";
-import {AddCommand, MassAddCommand, ClaimCommand, CloseCommand, RemoveCommand, RenameCommand, clearDM} from "../commands";
-import {InteractionCreateEvent, ReadyEvent} from "../events";
-import {jsonc} from "jsonc";
-import {REST} from "@discordjs/rest";
-import {Translation} from "../utils/translation";
+import { AddCommand, MassAddCommand, ClaimCommand, CloseCommand, RemoveCommand, RenameCommand, clearDM } from "../commands";
+import { InteractionCreateEvent, ReadyEvent } from "../events";
+const jsonc = require("jsonc-parser");
+import { REST } from "@discordjs/rest";
+import { Translation } from "../utils/translation";
 
 export default class ExtendedClient extends Client {
 	public readonly config: ConfigType;
@@ -19,7 +19,7 @@ export default class ExtendedClient extends Client {
 
 		this.config = config;
 		this.prisma = new PrismaClient({
-			errorFormat: "minimal"
+			errorFormat: "minimal",
 		});
 		this.locales = new Translation(this.config.lang, path.join(__dirname, "../../locales/"));
 		this.commands = new Collection([
@@ -32,12 +32,10 @@ export default class ExtendedClient extends Client {
 			[clearDM.data.name, new clearDM(this)],
 		]);
 		this.loadEvents();
-
 	}
 
-	public msToHm (ms: number | Date) {
-
-		if(ms instanceof Date) ms = ms.getTime();
+	public msToHm(ms: number | Date) {
+		if (ms instanceof Date) ms = ms.getTime();
 
 		const days = Math.floor(ms / (24 * 60 * 60 * 1000));
 		const daysms = ms % (24 * 60 * 60 * 1000);
@@ -54,10 +52,9 @@ export default class ExtendedClient extends Client {
 		if (minutes > 0) result = `${minutes}m ${sec}s`;
 		if (sec > 0) result = `${sec}s`;
 		return result;
-
 	}
 
-	private loadEvents () {
+	private loadEvents() {
 		this.on("interactionCreate", (interaction) => new InteractionCreateEvent(this).execute(interaction));
 		this.on("ready", () => new ReadyEvent(this).execute());
 	}
@@ -74,7 +71,7 @@ export default class ExtendedClient extends Client {
 
 		const { guildId } = jsonc.parse(fs.readFileSync(path.join(__dirname, "../../config/config.jsonc"), "utf8"));
 
-		if(!process.env["TOKEN"]) throw Error("Discord Token Expected, deploy-command");
+		if (!process.env["TOKEN"]) throw Error("Discord Token Expected, deploy-command");
 		const rest = new REST({ version: "10" }).setToken(process.env["TOKEN"]);
 
 		rest
